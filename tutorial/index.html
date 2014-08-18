@@ -1,0 +1,56 @@
+<html id="app">
+  <head>
+    <title v-text="title"></title>
+    <script src="http://vuejs.org/js/vue.min.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <div v-repeat="message:messages">
+        {{$index}}
+        <input v-model="message.body" value="{{message.body}}" v-on="keyup:changeMessage(message)">
+        from:{{message.from}}
+        <button v-on="click:deleteMessage($index)" >x</button>
+        <br>
+    </div>
+    <form id="form" v-on="submit:addMessage">
+        from:<br>
+        <input v-model="newMessage.from">
+        <br>
+        message:<br>
+        <input v-model="newMessage.body">
+        <input type="submit" value="Add Message">
+    </form>
+  </body>
+  <script charset="utf-8">
+    var app = new Vue({
+        el: '#app',
+        data: {
+            title:'Hello myChat',
+            messages: [],
+            newMessage: {
+                from: '',
+                body: ''
+            },
+        },
+        methods: {
+            addMessage: function(e) {
+                e.preventDefault(); //submitをキャンセル
+                var message = {
+                  from:this.newMessage.from,
+                  body:this.newMessage.body
+                  };
+                this.messages.push(message);
+                this.newMessage.body = '';
+            },
+            changeMessage: function(message) {
+              console.log("changeMessage:" + message.body);
+            },
+            deleteMessage: function(index) {
+              console.log("deleteMessage:" + this.messages[index].body);
+              this.messages.$remove(index);
+            }
+
+        }
+    })
+
+  </script>
+</html>
