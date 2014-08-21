@@ -1,0 +1,90 @@
+<html id="app">
+  <head>
+    <title v-text="title"></title>
+    <script src="https://cdn.firebase.com/js/client/1.0.2/firebase.js" charset="utf-8"></script>
+    <script src="http://vuejs.org/js/vue.min.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <div v-repeat="message:messages">
+        {{$index}}
+        <input v-model="message.body" value="{{message.body}}" v-on="keyup:changeMessage(message)">
+        from:{{message.from}}
+        <button v-on="click:deleteMessage(message)" >x</button>
+        <br>
+    </div>
+    <form id="form" v-on="submit:addMessage">
+        from:<br>
+        <input v-model="newMessage.from">
+        <br>
+        message:<br>
+        <input v-model="newMessage.body">
+        <input type="submit" value="Add Message">
+    </form>
+  </body>
+  <script charset="utf-8">
+
+  //追加箇所
+  var baseURL = 'https://m0a-s-sandbox.firebaseio.com/';
+  var Messages   = new Firebase(baseURL + 'messages');
+
+  //追加時
+  Messages.on('child_added', function (snapshot) {
+      var message = snapshot.val();
+      message.id = snapshot.name(); //識別子を取得しvue.jsのModelへ登録しておく。この値で変更時のオブジェクトを検出する
+      app.messages.push(message); //vue.jsのmodelへの追加処理
+  });
+
+  //変更時
+  Messages.on('child_changed', function (snapshot) {
+    var id = snapshot.name();
+      app.messages.some(function(message) {
+          if (message.id === id) {
+              message.body = snapshot.val().body;　//変更の反映
+              return true;
+          }
+      });
+  });
+
+  //削除時
+  Messages.on('child_removed', function (snapshot) {
+    var id = snapshot.name();
+      app.messages.some(function(message) {
+          if (message.id === id) {
+            app.messages.$remove(message);
+            return true;
+          }
+      });
+  });
+
+  var app = new Vue({
+      el: '#app',
+      data: {
+          title:'Hello myChat',
+          messages: [],
+          newMessage: {
+              from: '',
+              body: ''
+          },
+      },
+      methods: {
+          addMessage: function(e) {
+              e.preventDefault(); //submitをキャンセル
+
+              Messages.push(this.newMessage);
+              this.newMessage.body = '';
+
+          },
+          changeMessage: function(message) {
+            console.log("changeMessage:" + message.body);
+            Messages.child(message.id).child('body').set(message.body)
+          },
+          deleteMessage: function(message) {
+            console.log("deleteMessage:" + message.body);
+            Messages.child(message.id).remove();
+          }
+
+      }
+  });
+
+  </script>
+</html>
